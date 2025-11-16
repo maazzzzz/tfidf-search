@@ -8,7 +8,7 @@ from .constants import *
 
 def load_version():
     if not os.path.exists(VERSION_PATH):
-        return {"version": 0, "N": 0}  # include N by default
+        return {"version": 0, "docs_ingested": 0}  # include N by default
     return json.load(open(VERSION_PATH))
 
 def save_version(obj):
