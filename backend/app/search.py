@@ -47,8 +47,7 @@ async def search_query(term: str):
     top_docs = (
         tf_scan
         .with_columns((pl.col("count") * idf).alias("score"))
-        .sort("doc_id")  # First sort by doc_id (ascending/lexical)
-        .sort("score", descending=True)  # Then sort by score (stable sort keeps doc_id order for ties)
+        .sort(["score", "doc_id"], descending=[True, False])
         .select("doc_id")
         .head(3)
         .collect()
