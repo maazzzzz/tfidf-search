@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  nats:
+    image: nats:2.10-alpine
+    user: 1000:1000
+    container_name: nats
+    command: ["-js"]
+    ports:
+      - "4222:4222"
+    volumes:
+      - nats_data:/data/jetstream
+
+  backend:
+    build: ./backend
+    container_name: tfidf_backend
+    user: 1000:1000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/storage:/app/storage
+    depends_on:
+      - nats
+
+  ingestion_worker:
+    build: ./backend
+    container_name: tfidf_ingestion_worker
+    user: 1000:1000
+    depends_on:
+      - nats
+      - backend
+    environment:
+      - NATS_URL=nats://nats:4222
+    volumes:
+      - ./backend/storage:/app/storage
+    command: python -m app.ingestion_worker
+
+  merge_worker:
+    build: ./backend
+    container_name: tfidf_merge_worker
+    user: 1000:1000
+    depends_on:
+      - backend
+    volumes:
+      - ./backend/storage:/app/storage
+    command: python -m app.merge_worker
+    environment:
+      - MERGE_INTERVAL=60
+
+volumes:
+  nats_data:
